@@ -3,7 +3,6 @@
 import React from 'react';
 
 export default function Footer() {
-  // Footer component for the landing page
   return (
     <footer className="bg-indigo-600 text-white p-4 text-center xl-container mx-auto">
       <div className=" mx-auto">

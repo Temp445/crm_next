@@ -6,7 +6,7 @@ import { MdOutlineGeneratingTokens } from "react-icons/md";
 import { IoAddOutline } from "react-icons/io5";
 
 
-// Define types for features
+
 interface Feature {
   name: string;
   standard: boolean;
@@ -15,7 +15,6 @@ interface Feature {
   premiumNote?: string;
 }
 
-// Define types for plans
 interface Plan {
   name: string;
   desc: string;
@@ -34,7 +33,7 @@ interface Plan {
   link?: string;
 }
 
-// Define props for FeatureIcon component
+
 interface FeatureIconProps {
   available: boolean;
   limited?: boolean;
@@ -43,7 +42,7 @@ interface FeatureIconProps {
 const PricingTable: React.FC = () => {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
-  // features-1
+
   const features1: Feature[] = [
     { name: 'Excel & Spreadsheet Import', standard: true, premium: true },
     { name: 'Lead Tracking', standard: true, standardNote: '(Up to 1500)', premium: true, premiumNote: '(Up to 3000)' },
@@ -51,14 +50,14 @@ const PricingTable: React.FC = () => {
     { name: 'Task Assignment & Tracking', standard: true, premium: true },
   ];
 
-  //features-2
+
   const autoTriggerFeatures: Feature[] = [
     { name: 'Opportunity Tracking', standard: true, premium: true },
     { name: 'Quotation Generation', standard: true, premium: true },
     { name: 'Order Management', standard: true, premium: true },
   ];
 
-  //features-3
+
   const features2: Feature[] = [
     { name: 'Customized Quote templates', standard: true, standardNote: '(1)', premium: true },
     { name: 'Sales Team Performance Monitoring', standard: true, premium: true },

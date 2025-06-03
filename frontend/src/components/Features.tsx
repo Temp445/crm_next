@@ -121,7 +121,7 @@ export default function Features() {
     </motion.h2>
 
     <div className="bg-gradient-to-r from-indigo-50 to-purple-50  ">
-      {/* Feature 1 */}
+      
       <ScrollSection id="feature-1">
         <section className=" relative xl:py-16  smm:-ml-2  sml:-ml-2   xxl:ml-0 xl:ml-0 xxxl:ml-36 2xl:ml-0 xml:left-10">
           <div className="w-full lg:max-w-[1359px] h-[480px] xl:h-[570px] relative z-[76] mt-[3px] mr-0 mb-0  lg:ml-[39px]  xl:ml-0">

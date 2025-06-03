@@ -9,7 +9,7 @@ import Image from "next/image";
 import { CgPlayButtonO } from "react-icons/cg";
 import { IoCloseCircleOutline } from "react-icons/io5";
 
-// Declare the gtag function on the window object for TypeScript
+
 declare global {
   interface Window {
     gtag: (...args: unknown[]) => void;
@@ -28,18 +28,18 @@ export default function Hero() {
       });
   };
   
-  const handleDemoClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>): void => {
-      e.preventDefault();
-      
-      setShowVideoOverlay(true);
-      
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.play();
-        }
-      }, 50);
-  };
-  
+const handleDemoClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void => {
+  e.preventDefault();
+
+  setShowVideoOverlay(true);
+
+  setTimeout(() => {
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  }, 50);
+};
+
   const closeVideoOverlay = (): void => {
     if (videoRef.current) {
       videoRef.current.pause();
@@ -130,13 +130,14 @@ export default function Hero() {
                 />
               </svg>
             </Link>
-            <Link
-              href="#"
-              onClick={handleDemoClick}
-              className="flex w-full md:w-auto text-black py-2 pl-5 sm:py-3 hover:bg-blue-900 hover:text-white sm:px-6 rounded-lg font-medium border border-black transition-all text-center shadow-lg hover:border-0"
-            >
-             <span className="mr-2 mt-1 text-semibold"><CgPlayButtonO /></span> Watch Demo
-            </Link>
+          <button
+  onClick={handleDemoClick}
+  className="flex items-center w-full md:w-auto text-black py-2 sm:py-3 px-5 sm:px-6 hover:bg-blue-900 hover:text-white rounded-lg font-medium border border-black transition-all text-center shadow-lg hover:border-0 gap-2"
+>
+  <span className="text-xl"><CgPlayButtonO /></span>
+  Watch Demo
+</button>
+
           </div>
         </div>
 
@@ -147,26 +148,25 @@ export default function Hero() {
           <div
             id="videoOverlay"
             className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"
-            onClick={handleOverlayClick} >
-            <div className="relative w-full max-w-4xl mx-4">
+            onClick={handleOverlayClick}
+          >
+            <div className="relative w-full max-w-4xl mx-4 aspect-video">
               <button
                 onClick={closeVideoOverlay}
-                className="absolute -top-12 right-0 text-white text-3xl hover:text-red-700 focus:outline-none"
-                aria-label="Close video">
+                className="absolute -top-12 right-0 text-white text-3xl hover:text-red-600 focus:outline-none"
+                aria-label="Close video"
+              >
                 <IoCloseCircleOutline />
               </button>
-              <div className=" rounded-lg overflow-hidden ">
-                <video
-                  ref={videoRef}
-                  className="w-full"
-                  controls >
-                  <source 
-                    src="/videos/CRM_DemoVideo.mp4" 
-                    type="video/mp4" 
-                  />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
+
+              <iframe
+                className="w-full h-full rounded-lg"
+                src="https://www.youtube.com/embed/LcYOrfL1a5Q?autoplay=1&rel=0&modestbranding=1"
+                title="Demo Video"
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              ></iframe>
             </div>
           </div>
         )}
