@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
+const CONVERSION_ID = process.env.NEXT_PUBLIC_GA_ADS_CONVERSION_ID;
+
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -40,23 +43,18 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/AceLogo.png" />
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=AW-11528496617"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-11528496617');
-          `}
-        </Script>
-        <Script id="google-conversion" strategy="afterInteractive">
-          {`
-            gtag('event', 'conversion', {'send_to': 'AW-11528496617/ABjlCI7f_p0aEOnLm_kq'});
-          `}
-        </Script>
+   
+<Script async src={`https://www.googletagmanager.com/gtag/js?id=${CONVERSION_ID}`}/>
+
+<Script id="google-ads-init" strategy="afterInteractive">
+ {`
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', '${CONVERSION_ID}');
+  `}
+</Script>
       </head>
       <body className={inter.variable}>
         {children}

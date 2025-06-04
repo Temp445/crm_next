@@ -302,7 +302,7 @@ export default function ProductEnquire({ onClose }: ProductEnquireProps) {
                   value={phone}
                   onChange={setPhone}
                   required
-                   className=" !shadow-none rounded !bg-transparent border mt-1 p-2 [&>input]:border-none [&>input]:outline-none [&>input]:bg-transparent"
+                   className=" !shadow-none  !bg-transparent rounded-md border border-gray-300 mt-1 p-2 [&>input]:border-none [&>input]:outline-none [&>input]:bg-transparent"
                 />
                 {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
             </div>
