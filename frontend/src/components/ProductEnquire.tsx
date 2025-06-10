@@ -1,219 +1,140 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { ChangeEvent, FormEvent, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 import { MdOutlineMail, MdAddIcCall } from "react-icons/md";
 import PhoneInput, {
   isValidPhoneNumber
 } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
+import { sendWhatsappMessage } from "../services/whatsapp/whatsappService";
 
 
-const service_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-const template_ID = process.env.NEXT_PUBLIC_EMAILJS_ENQ_TEMPLATE_ID;
+const service_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
+const template_ID = process.env.NEXT_PUBLIC_EMAILJS_ENQ_TEMPLATE_ID!;
 const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-const stromxToken = process.env.NEXT_PUBLIC_STROMX_TOKEN;
-const adminPhones = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(",").map((p) => p.trim());
+const adminPhones = process.env.NEXT_PUBLIC_ADMIN_PHONES?.split(',').map((p) => p.trim()) || [];
 
-type FormErrors = {
-  [key: string]: string;
-};
 
 type ProductEnquireProps = {
   onClose?: () => void;
 };
 
-type FormData = {
-  name: string;
-  company: string;
-  email: string;
-  number: string;
-  location: string;
-  product: string; 
-  queries: string;
-};
+
 
 export default function ProductEnquire({ onClose }: ProductEnquireProps) {
   const [loading, setLoading] = useState<boolean>(false);
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const form = useRef<HTMLFormElement | null>(null);
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string>("");
   const [phone, setPhone] = useState<string | undefined>();
   const [phoneError, setPhoneError] = useState<string>("");
 
-  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const validateEmail = async (email: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/proxy-validate-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
 
-   const gmailTypos = [
-    'gamil.com', 'gnail.com', 'gmial.com', 'gmaill.com', 'gmail.con',
-    'gmail.co', 'gmail.om', 'gmail.cim', 'gmail.cm', 'gmai.com',
-    'gmail.comm', 'gmal.com', 'gmaul.com', 'gmail.xom', 'gmail.vom',
-    'g.mail.com', 'gmaik.com', 'gmaio.com', 'gmali.com', 'gmali.con',
-    'gmail.clm', 'gmail.coom', 'gmaiil.com', 'ggmail.com', 'gemail.com',
-    'gmmail.com', 'gmiall.com', 'gmsil.com', 'gmale.com', 'gmall.com',
-    'gmil.com', 'gmailc.om', 'gmailc.com', 'gmailm.com', 'gmali.cm',
-    'gmalil.com', 'gmial.cm', 'gmaol.com', 'gmauk.com', 'gmaul.co',
-    'gmail.ckm', 'gmail.kom', 'gmail.bom', 'gmail.dcom', 'gmaul.con', 'mail.com'
-  ];
+      if (!response.ok) return 'Please enter a valid email address.';
 
-
-    const validateEmail = (email: string): string => {
-    if (!emailPattern.test(email)) {
-      return 'Please enter a valid email address.';
-    }
-
-    const domain = email.split('@')[1]?.toLowerCase();
-    if (gmailTypos.includes(domain)) {
-      return 'Did you mean "gmail.com"?';
-    }
-
-    return '';
-  };
-
-
-    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const emailInput = e.target.value.trim();
-      setEmail(emailInput);
-  
-      if (!emailPattern.test(emailInput)) {
-        setEmailError('Please enter a valid email address.');
-        return;
-      }
-  
-      const domain = emailInput.split('@')[1]?.toLowerCase();
-  
-      if (gmailTypos.includes(domain)) {
-        setEmailError('Did you mean "gmail.com"?');
-        return;
-      }
-  
-      setEmailError('');
-    };
-
-
-  const sendWhatsAppNotification = async (formData: FormData) => {
-    if (!stromxToken || !adminPhones || adminPhones.length === 0) {
-      console.warn("Missing Stromx token or admin phone numbers.");
-      return;
-    }
-
-    const messagePayload = {
-      type: "template",
-      template: {
-        name: "enquiry_ace_crm",
-        language: { policy: "deterministic", code: "en" },
-        components: [
-          {
-            type: "body",
-            parameters: [
-              { type: "text", text: formData.name },
-              { type: "text", text: formData.company },
-              { type: "text", text: formData.email },
-              { type: "text", text: formData.number },
-              { type: "text", text: formData.location },
-              { type: "text", text: formData.queries },
-            ],
-          },
-        ],
-      },
-    };
-
-    for (const phone of adminPhones) {
-      try {
-        const response = await fetch(
-          `https://api.stromx.io/v1/message/send-message?token=${stromxToken}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...messagePayload, to: phone }),
-          }
-        );
-        const data = await response.json();
-
-        if (response.ok) {
-          console.log(`WhatsApp sent to ${phone}:`, data);
-        } else {
-          console.error(`WhatsApp failed for ${phone}:`, data);
-        }
-      } catch (error) {
-        console.error(`WhatsApp error for ${phone}:`, error);
-      }
+      const result = await response.json();
+      return result.isValid ? '' : 'Please enter a valid email address.';
+    } catch (err) {
+      console.error('Email validation error:', err);
+      return 'Email validation service unavailable.';
     }
   };
 
- const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  if (!form.current) return;
-
-  const elements = form.current.elements as typeof form.current.elements & {
-    name: HTMLInputElement;
-    company: HTMLInputElement;
-    email: HTMLInputElement;
-    location: HTMLInputElement;
-    product: HTMLInputElement;
-    queries: HTMLTextAreaElement;
+  const handleEmailChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const emailInput = e.target.value.trim();
+    setEmail(emailInput);
+    const error = await validateEmail(emailInput);
+    setEmailError(error);
   };
 
-  const errors: FormErrors = {};
-  const name = elements.name.value.trim();
-  const company = elements.company.value.trim();
-  const location = elements.location.value.trim();
-  const product = elements.product.value.trim();
-  const queries = elements.queries.value.trim();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
 
-  if (!name) errors.name = "Name is required.";
-  if (!company) errors.company = "Company name is required.";
+    const formCurrent = form.current;
+    if (!formCurrent) return;
 
-  else {
-    const emailValidationMessage = validateEmail(email);
+    const emailValidationMessage = await validateEmail(email);
     if (emailValidationMessage) {
-      errors.email = emailValidationMessage;
+      setEmailError(emailValidationMessage);
+      return;
+    } else {
+      setEmailError('');
     }
-  }
-  if (!phone || !isValidPhoneNumber(phone)) {
-    errors.number = "Valid phone number is required.";
-    setPhoneError("Please enter a valid phone number.");
-  } else {
-    setPhoneError("");
-  }
-  if (!location) errors.location = "Location is required.";
 
-  setFormErrors(errors);
+    if (!phone || !isValidPhoneNumber(phone)) {
+      setPhoneError('Please enter a valid phone number.');
+      return;
+    } else {
+      setPhoneError('');
+    }
 
-  if (Object.keys(errors).length > 0) {
-    alert("Please fill out all required fields correctly.");
-    return;
-  }
+    
 
-  const formData: FormData = {
-    name,
-    company,
-    email,
-    number: phone!,
-    location,
-    product,
-    queries
+    const formData = {
+      name: (formCurrent['Name'] as HTMLInputElement)?.value || '',
+      company: formCurrent['company']?.value || '',
+      email,
+      number: phone,
+      location: formCurrent['location']?.value || '',
+      queries: formCurrent['queries']?.value || '',
+      product: formCurrent['product']?.value || '',
+    };
+
+    setLoading(true);
+
+    try {
+      await emailjs.send(service_ID, template_ID, formData, publicKey);
+      alert('Your message has been sent successfully!');
+      formCurrent.reset();
+      setEmail('');
+      setPhone('');
+    } catch (error) {
+      console.error('Email sending failed:', error);
+      alert('There was an issue sending your message. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+
+    const phoneWithoutPlus = phone.replace(/^\+/, '');
+ 
+    try {
+      await sendWhatsappMessage(
+        'enquiry_ace_crm',
+        {
+          fullName: formData.name,
+          companyName: formData.company,
+          businessEmail: formData.email,
+          mobileNumber: phoneWithoutPlus,
+          location: formData.location,
+          message: formData.queries,
+        },
+        adminPhones,
+      );
+
+      await sendWhatsappMessage(
+        'customer_greetings',
+        {
+          fullName: formData.name,
+          product: formData.product,
+          siteUrl: 'https://acesoft.in',
+          imageUrl:
+            'https://res.cloudinary.com/dohyevc59/image/upload/v1749124753/Enquiry_Greetings_royzcm.jpg',
+        },
+        [phoneWithoutPlus],
+      );
+    } catch (error) {
+      console.error('WhatsApp sending error:', error);
+    }
   };
-
-  setLoading(true);
-
-  try {
-    await Promise.all([
-      emailjs.send(service_ID!, template_ID!, formData, publicKey),
-      sendWhatsAppNotification(formData)
-    ]);
-
-    alert("Your message has been sent successfully!");
-    form.current.reset();
-    setPhone(undefined);
-    setEmail('');
-  } catch (error) {
-    console.error("Submission error:", error);
-    alert("Something went wrong. Please try again later.");
-  } finally {
-    setLoading(false);
-  }
-};
 
 
   return (
@@ -232,24 +153,20 @@ export default function ProductEnquire({ onClose }: ProductEnquireProps) {
 
           <h1 className="md:text-2xl font-bold text-center mb-6">Product Enquiry</h1>
 
-          <form ref={form} noValidate onSubmit={handleSubmit} className="space-y-6">
+          <form ref={form} onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Name:
               </label>
               <input
                 id="name"
-                name="name"
+                name="Name"
                 type="text"
                 required
                 placeholder="Enter your name *"
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                aria-invalid={!!formErrors.name}
-                aria-describedby="name-error"
               />
-              {formErrors.name && (
-                <p id="name-error" className="text-red-500 text-sm mt-1">{formErrors.name}</p>
-              )}
+
             </div>
 
             <div>
@@ -263,12 +180,7 @@ export default function ProductEnquire({ onClose }: ProductEnquireProps) {
                 required
                 placeholder="Enter your company name *"
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                aria-invalid={!!formErrors.company}
-                aria-describedby="company-error"
               />
-              {formErrors.company && (
-                <p id="company-error" className="text-red-500 text-sm mt-1">{formErrors.company}</p>
-              )}
             </div>
 
             <div>
@@ -283,8 +195,6 @@ export default function ProductEnquire({ onClose }: ProductEnquireProps) {
                 placeholder="Enter your business email *"
                 onChange={handleEmailChange}
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                aria-invalid={!!formErrors.email}
-                aria-describedby="email-error"
               />
               {emailError && (
         <p className="text-red-500 text-sm mt-1">{emailError}</p>
@@ -318,12 +228,7 @@ export default function ProductEnquire({ onClose }: ProductEnquireProps) {
                 required
                 placeholder="Enter your location *"
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                aria-invalid={!!formErrors.location}
-                aria-describedby="location-error"
               />
-              {formErrors.location && (
-                <p id="location-error" className="text-red-500 text-sm mt-1">{formErrors.location}</p>
-              )}
             </div>
 
             <div className="flex flex-wrap gap-2 w-full items-center">
@@ -348,6 +253,7 @@ export default function ProductEnquire({ onClose }: ProductEnquireProps) {
                 id="queries"
                 name="queries"
                 rows={3}
+                required
                 placeholder="Enter your queries"
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
